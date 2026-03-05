@@ -21,38 +21,55 @@ train_prices   = y[:450]
 test_features  = X[450:500]
 test_prices    = y[450:500]
 
+n_features = train_features.shape[1]
 
-model = tf.keras.Sequential([
-    tf.keras.layers.Dense(1) # Выход - цена
-])
+# y = XW + b 
+W = tf.Variable(tf.random.normal([n_features, 1]))
+b = tf.Variable(tf.zeros([1]))
 
-# Компиляция модели
-model.compile(
-    optimizer=tf.keras.optimizers.SGD(learning_rate=0.01),
-    loss='mse',
-    metrics=['mae']
-)
+def predict(X):
+    return tf.matmul(X, W) + b
 
-# Обучение модели
-history = model.fit(
-    train_features,
-    train_prices,
-    epochs=20,
-    verbose=0
-)
+# среднеквадратичная ошибка
+def mse(y_pred, y_true):
+    return tf.reduce_mean(tf.square(y_pred - y_true))
 
-# Оценка
-test_loss, test_mae = model.evaluate(test_features, test_prices, verbose=0)
+learning_rate = 0.01
+optimizer = tf.optimizers.SGD(learning_rate)
 
-print("Test MSE:", test_loss) # Среднеквадратичная ошибка
-print("Test MAE:", test_mae) # Средняя абсолютная ошибка
+epochs = 400
+history = []
+# 200 - 9.5; 2.5
+# 400 - 7.6; 2.3
+# 600 - 7.9; 2.3
+# 800 - 8.0; 2.3
 
-# Предсказания
-predictions = model.predict(test_features)
+for epoch in range(epochs):
+    with tf.GradientTape() as tape:
+        y_pred = predict(train_features)
+        loss = mse(y_pred, train_prices)
+
+    gradients = tape.gradient(loss, [W, b])
+
+    optimizer.apply_gradients(zip(gradients, [W, b]))
+
+    history.append(loss.numpy())
+
+    if epoch % 20 == 0:
+        print("Epoch:", epoch, "Loss:", loss.numpy())
+
+# тест
+test_predictions = predict(test_features)
+
+test_mse = mse(test_predictions, test_prices)
+test_mae = tf.reduce_mean(tf.abs(test_predictions - test_prices))
+
+print("\nTest MSE:", test_mse.numpy())
+print("Test MAE:", test_mae.numpy())
 
 # Ошибки
 plt.figure()
-plt.plot(history.history['loss'])
+plt.plot(history)
 plt.title("Training Loss (MSE)")
 plt.xlabel("Epoch")
 plt.ylabel("MSE")
@@ -60,7 +77,7 @@ plt.show()
 
 # Реальные и предсказанные значения
 plt.figure()
-plt.scatter(test_prices, predictions)
+plt.scatter(test_prices, test_predictions)
 plt.xlabel("Real prices")
 plt.ylabel("Predicted prices")
 plt.title("Real vs predicted prices")
