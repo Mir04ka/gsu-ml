@@ -12,7 +12,7 @@ labels_raw = data.iloc[:, -1]
 
 mapping = {
     'unacc': 0,
-    'acc': 0,
+    'acc': 1,
     'good': 1,
     'vgood': 1
 }
@@ -71,7 +71,7 @@ for epoch in range(epochs):
     b.assign_sub(learning_rate * gradients[1])
 
     if epoch % 100 == 0:
-        print(f"Epoch {epoch}, Loss: {loss.numpy()}")
+        print(f"Epoch {epoch}")
 
 predictions = calc_predictions(test_features).numpy()
 predictions_classes = (predictions > 0.5).astype(int)
@@ -79,15 +79,43 @@ predictions_classes = (predictions > 0.5).astype(int)
 
 points_test = [[], [], [], []]
 points_test_err = [[], []]
+right_yes = 0
+right_no = 0
+total_yes = 0
+total_no = 0
 
 for i in range(len(test_classes)):
-    err = abs(test_classes[i] - predictions[i])
+    true = test_classes[i][0]
+    pred = predictions_classes[i][0]
+    prob = predictions[i][0]
+
+    err = abs(true - prob)
+
     points_test_err[0].append(i + 1)
-    points_test_err[1].append(err[0])
+    points_test_err[1].append(err)
     points_test[0].append(i + 1)
-    points_test[1].append(test_classes[i][0])
-    points_test[2].append(predictions[i][0])
-    points_test[3].append(predictions_classes[i][0])
+    points_test[1].append(true)
+    points_test[2].append(prob)
+    points_test[3].append(pred)
+    
+    if true == 1:
+        total_yes += 1
+        if pred == 1:
+            right_yes += 1
+    else:
+        total_no += 1
+        if pred == 0:
+            right_no += 1
+
+total = total_yes + total_no
+right = right_yes + right_no
+
+print(f"Total accuracy: {right} / {total} = {right / total:.3f}")
+
+print(f"Yes accuracy: {right_yes} / {total_yes} = {right_yes / total_yes:.3f}")
+print(f"No  accuracy: {right_no} / {total_no} = {right_no / total_no:.3f}")
+
+print(f"Avg error: {(total - right) / total:.3f}")
 
 plt.subplot(3, 1, 1)
 plt.plot(points_test[0], points_test[1], 'bo')
