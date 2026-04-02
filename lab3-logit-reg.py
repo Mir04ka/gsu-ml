@@ -4,7 +4,55 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn.preprocessing import StandardScaler
 
+# None:
+# 0.945
+# 0.922
+# 0.965
+# 0.954
+# 0.936
+# 0.951
+# 0.960
+# 0.957
+# AVG: 0.94875
+
+# 0
+# 0.922
+# 0.905
+# 0.905
+
+# 1
+# 0.908
+# 0.931
+# 0.908
+
+# 2
+# 0.945
+# 0.945
+# 0.931
+# 0.945
+# 0.960
+# 0.957
+# 0.957
+# 0.936
+# AVG: 0.947
+
+# 3
+# 0.769
+# 0.783
+# 0.772
+
+# 4
+# 0.910
+# 0.908
+# 0.919
+
+# 5
+# 0.783
+# 0.746
+# 0.757
+
 data = pd.read_csv('car_evaluation.csv', header=None)
+# data = data.drop(columns=[2])
 
 features = pd.get_dummies(data.iloc[:, :-1]).values
 
